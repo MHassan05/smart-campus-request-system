@@ -1,24 +1,8 @@
 from typing import *
 
-def get_validated_input(prompt: str, valid_options: List[str]) -> str:
-    '''
-    Prompt user for input and validate it against a list of valid options.
-    Args:
-        prompt (str): The message to display to the user.
-        valid_options (list): A list of valid input options.
-    Returns:
-        str: The validated user input.
-    '''
-    while True:
-        user_input = normalize_input(input(prompt).strip().lower())
-        # debug line 
-        print(f"User input: {user_input}")
-        for option in valid_options:
-            if user_input.lower() == option.lower():
-                return option
-        print("Invalid input. Please try again.")
-
-
+#================================================================
+# Following code are used as helper functions for input validation and processing. 
+#================================================================
 
 def print_list(title: str, items: List[str]) -> None:
     '''
@@ -28,10 +12,30 @@ def print_list(title: str, items: List[str]) -> None:
         items (list): A list of items to print.
     '''
     print(f"\n{title}:")
-    for item in items:
-        print(f"- {item}")
+    for idx, item in enumerate(items, 1):
+        print(f"{idx}. {item}")
+     
 
+def get_validated_input(prompt: str, valid_options: List[str], title: str | None) -> str: 
+    '''
+    Prompt user for input and validate it against a list of valid options.
+    Args:
+        prompt (str): The message to display to the user.
+        valid_options (list): A list of valid input options.
+        title (str): The title to display before the list of options.
+    Returns:
+        str: The validated user input.
+    '''
 
+    if title:
+        print_list(title, valid_options)
+
+    while True:
+        user_input = input(prompt).strip()
+        if user_input.isdigit() and int(user_input) in list(range(1, len(valid_options) + 1)):
+            return valid_options[int(user_input) - 1]
+        print("Invalid input. Please select among the given options only.")
+           
 
 def get_int_in_range(prompt: str, min_value: int, max_value: int) -> int:
     '''
@@ -50,7 +54,6 @@ def get_int_in_range(prompt: str, min_value: int, max_value: int) -> int:
         print(f"Invalid input. Enter a number between {min_value} and {max_value}.")
 
 
-
 def get_name() -> str:
     '''
     Get and validate user's name, 
@@ -64,8 +67,7 @@ def get_name() -> str:
     while not name or not name.replace(" ", "").isalpha():
         print("Name cannot be empty or contain numbers/special characters.")
         name = input("Enter Name: ").strip()
-    return name.title() 
-
+    return name.title()
 
 
 def get_role(valid_roles: List[str]) -> str:
@@ -78,47 +80,100 @@ def get_role(valid_roles: List[str]) -> str:
     '''
 
     return get_validated_input(
-        "Enter Role (student / instructor / staff): ",
-        valid_roles
-    ).capitalize() 
-
+        "Enter Role (1-3): ",
+        valid_roles,
+        "Valid Roles"
+    )
 
 
 def get_request_type(request_type_map: Dict[str, str]) -> str:
     '''
-    Get and validate user's request type.
+    Get input from user for request type, and validate it between 1-5.
+    Then return corresponding request type string based on the provided mapping.
     Args:
         request_type_map (Dict[str, str]): A dictionary mapping request type choices to their descriptions.
     Returns:
         str: The validated user request type.
     '''
 
-    print("\nEnter Request Type:")
-    for key, value in request_type_map.items():
-        print(f"{key}. {value}")
+    return get_validated_input(
+        "Enter Request Type (1-5): ",
+        list(request_type_map.values()),
+        "Request Types"
+    ) 
+
+
+def validate_query(query: str) -> bool:
+    '''
+    Validate user's query for eligibility checks.
+    Returns:
+        bool: True if the query is valid, False otherwise.
+    '''
+    return "(" in query and ")" in query and len(query) > 3
+
+# ===============================================================================
+# Code below this is for handling possible fields based on different request types, 
+# I put them separately to make the main get_user_input function cleaner and more modular.
+# ===============================================================================
+
+def get_navigation_inputs(valid_locations: List[str]) -> Tuple[str, str]:
+    '''
+    Prompt user to enter current and destination locations for navigation requests, 
+    and validate them against the list of valid_locations.
+    Args:
+    valid_locations (List[str]): A list of valid locations to choose from.
+    Returns:
+    Tuple[str, str]: A tuple containing the validated current location and destination.
+    '''
+    current_location = get_validated_input(
+            "Enter Current Location (1-{}): ".format(len(valid_locations)),
+            valid_locations,
+            None 
+        )
+    while True: 
+        destination = get_validated_input(
+            "Enter Destination (1-{}): ".format(len(valid_locations)),
+            valid_locations,
+            None
+        )
+        if destination != current_location:
+            break
+        print("Destination cannot be the same as current location.")
+
+    return current_location, destination
+
+
+def get_eligibility_inputs() -> str:
+    '''
+    Get and validate user's query for eligibility checks.
+    Returns:
+        str: The validated user query.
+    '''
 
     while True:
-        choice = normalize_input(input("Enter Choice (1-5): ").strip())
-        if choice in request_type_map:
-            request_type = request_type_map[choice]
-            break
-        print("Invalid choice. Enter a number between 1 and 5.")
-
-    return request_type
+        query = input("Enter Query (e.g. UsesLab(DrKhan, Lab1)): ").strip()
+        if validate_query(query):
+            return query
+        print("Invalid query format.")
 
 
-
-def get_location(prompt: str, valid_locations: List[str]) -> str:
+def get_booking_inputs(valid_categories: List[str]) -> Tuple[str, int, str | None]:
     '''
-    Get and validate user's location (current or destination).
+    Get and validate user's input for booking or scheduling requests, including category, preferred slot, and optional group ID. 
     Args:
-        prompt (str): The message to display to the user.
-        valid_locations (List[str]): A list of valid locations.
+        valid_categories (List[str]): A list of valid categories to choose from.
     Returns:
-        str: The validated user location.
+        Tuple[str, int, str | None]: A tuple containing the validated category, preferred slot, and optional group ID.
     '''
-    return get_validated_input(prompt, valid_locations)
+    category = get_validated_input(
+        "Enter Category (1-{}): ".format(len(valid_categories)),
+        valid_categories,
+        None 
+    )
+    preferred_slot = get_int_in_range("Enter Preferred Slot (1-4): ", 1, 4)
+    group_id = input("Enter Group ID (optional): ").strip() or None
 
+    return category, preferred_slot, group_id
 
 
 def get_yes_no(prompt: str) -> str:
@@ -136,105 +191,56 @@ def get_yes_no(prompt: str) -> str:
         print("Invalid input. Enter 'yes/y' or 'no/n'.")
 
 
-
-def validate_query(query: str) -> bool:
+def get_urgent_service_inputs(valid_categories: List[str], valid_locations: List[str]) -> Tuple[str, str, int, int, int, int]:
     '''
-    Validate user's query for eligibility checks.
-    Returns:
-        bool: True if the query is valid, False otherwise.
-    '''
-    return "(" in query and ")" in query and len(query) > 3
-
-
-
-def get_category(valid_categories: List[str]) -> str:
-    '''
-    Get and validate user's category for booking requests.
-    Returns:
-        str: The validated user category.
-    '''
-    print_list("Available Categories", valid_categories)
-    return get_validated_input("Enter Category: ", valid_categories)
-
-
-
-def get_preferred_slot(allow_skip: bool = False) -> str: 
-    '''
-    Get and validate user's preferred slot for booking requests.
+    Get and validate user's input for urgent service requests, including category, current location, severity, time sensitivity, crowd level, and preferred slot.
     Args:
-        allow_skip (bool): Whether to allow the user to skip entering a preferred slot (default: False).
+        valid_categories (List[str]): A list of valid categories to choose from.
+        valid_locations (List[str]): A list of valid locations to choose from.
     Returns:
-        str: The validated user preferred slot.
+        Tuple[str, str, int, int, int, int]: A tuple containing the validated category, current location, severity level, time sensitivity level, crowd level, and preferred slot.
     '''
-    if allow_skip:
-        slot = get_int_in_range("Enter Preferred Slot (0 to skip, 1-4): ", 0, 4)
-        return None if slot == 0 else slot
-    return get_int_in_range("Enter Preferred Slot (1-4): ", 1, 4)
+    category = get_validated_input(
+        "Enter Category (1-{}): ".format(len(valid_categories)),
+        valid_categories,
+        None 
+    )
+    current_location = get_validated_input(
+        "Enter Current Location (1-{}): ".format(len(valid_locations)),
+        valid_locations,
+        None 
+    )
+    severity = get_int_in_range("Enter Severity (1-10): ", 1, 10)
+    time_sensitivity = get_int_in_range("Enter Time Sensitivity (1-10): ", 1, 10)
+    crowd_level = get_int_in_range("Enter Crowd Level (1-10): ", 1, 10)
+    preferred_slot = get_int_in_range("Enter Preferred Slot (1-4): ", 1, 4)
+
+    return category, current_location, severity, time_sensitivity, crowd_level, preferred_slot
 
 
-def get_group_id() -> str | None:
+def get_full_service_inputs(valid_categories: List[str], valid_locations: List[str]) -> Tuple[str, str, int, int, int, int, str | None]:
     '''
-    Get user's group ID for group requests. This field is optional.
-    Returns:
-        str | None: The user-entered group ID, or None if the user chooses to skip.
-    '''
-    return input("Enter Group ID (optional): ").strip() or None
-
-
-
-def get_severity() -> int:
-    '''
-    Get and validate user's input for severity level in urgent service requests.
-    Returns:
-        int: The validated severity level.
-    '''
-    return get_int_in_range("Enter Severity (1-10): ", 1, 10)
-
-
-
-def get_time_sensitivity() -> int:
-    '''
-    Get and validate user's input for time sensitivity in urgent service requests.
-    Returns:
-        int: The validated time sensitivity level.
-    '''
-    return get_int_in_range("Enter Time Sensitivity (1-10): ", 1, 10)
-
-
-
-def get_crowd_level() -> int:
-    '''
-    Get and validate user's input for crowd level in urgent service requests.
-    Returns:
-        int: The validated crowd level.
-    '''
-    return get_int_in_range("Enter Crowd Level (1-10): ", 1, 10)
-
-
-
-def get_description() -> str | None:
-    '''
-    Get user's description note for service requests. This field is optional.
-    Returns:
-        str | None: The user-entered description note, or None if the user chooses to skip.
-    '''
-    return input("Enter Description Note (optional): ").strip() or None
-
-
-def normalize_input(user_input: str) -> str: 
-    '''
-    Normalize user input by converting it to a standard format\n
-    e.g., "ai lab" → "AI_Lab"\n
-    "hostel" → "Hostel"\n
-    "urgent_service_request" → "Urgent_Service_Request".
+    Get and validate user's input for full service requests, including category, current location, preferred slot, severity, time sensitivity, crowd level, and optional description note.
     Args:
-        user_input (str): The raw input from the user.
+        valid_categories (List[str]): A list of valid categories to choose from.
+        valid_locations (List[str]): A list of valid locations to choose from.
     Returns:
-        str: The normalized user input.
+        Tuple[str, str, int, int, int, int, str | None]: A tuple containing the validated category, current location, preferred slot, severity level, time sensitivity level, crowd level, and optional description note.
     '''
-    mapping = {
-        'ai lab': 'AI Lab',  
-    }
+    category = get_validated_input(
+        "Enter Category (1-{}): ".format(len(valid_categories)),
+        valid_categories,
+        None 
+    )
+    current_location = get_validated_input(
+        "Enter Current Location (1-{}): ".format(len(valid_locations)),
+        valid_locations,
+        None 
+    )
+    preferred_slot = get_int_in_range("Enter Preferred Slot (1-4): ", 1, 4)
+    severity = get_int_in_range("Enter Severity (1-10): ", 1, 10)
+    time_sensitivity = get_int_in_range("Enter Time Sensitivity (1-10): ", 1, 10)
+    crowd_level = get_int_in_range("Enter Crowd Level (1-10): ", 1, 10)
+    description_note = input("Enter Description Note (optional): ").strip() or None
 
-    normalized = mapping.get(user_input.lower(), user_input)
-    return normalized.replace(" ", "_").title()
+    return category, current_location, preferred_slot, severity, time_sensitivity, crowd_level, description_note

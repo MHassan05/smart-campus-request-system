@@ -1,8 +1,6 @@
 from utils.graph_data import campus_unweighted_graph 
 from utils.helper import * 
 
-
-
 # Available roles, categories, locations, and request types  
 VALID_ROLES = ["Student", "Instructor", "Staff"]
 VALID_CATEGORIES = ["AI_Lab_Support", "Viva", "Access", "Maintenance"]
@@ -14,79 +12,6 @@ REQUEST_TYPE_MAP = {
     "4": "Urgent_Service_Request",
     "5": "Full_Service_Request"
 }
-
-def get_navigation_inputs() -> Tuple[str, str]: 
-    '''
-    Get and validate user's current location and destination for navigation requests.
-    Returns:
-        Tuple[str, str]: A tuple containing the validated current location and destination.
-    '''
-    curr = get_location("Enter Current Location: ", VALID_LOCATIONS)
-    dest = get_location("Enter Destination: ", VALID_LOCATIONS)
-    while dest == curr:
-             print("Destination cannot be same as current location.")
-             dest = get_location("Enter Destination: ", VALID_LOCATIONS)
-    return curr, dest
-
-
-def get_eligibility_inputs() -> str:
-    '''
-    Get and validate user's query for eligibility checks.
-    Returns:
-        str: The validated user query.
-    '''
-
-    while True:
-        query = input("Enter Query (e.g. UsesLab(DrKhan, Lab1)): ").strip()
-        if validate_query(query):
-            return query
-        print("Invalid query format.")
-
-def get_booking_inputs() -> Tuple[str, str, str | None]:
-    '''
-    Get and validate user's category and preferred slot for booking requests.
-    Returns:
-        Tuple[str, str, str | None]: A tuple containing the validated category, preferred slot, and group ID.
-    '''
-
-    return get_category(VALID_CATEGORIES), get_preferred_slot(), get_group_id()
-
-
-def get_urgent_service_inputs() -> Tuple[str, str, str, str, str, str | None]:
-    '''
-    Get and validate user's inputs for urgent service requests.
-    Returns:
-        Tuple[str, str, str, str, str, str | None]: A tuple containing the validated category, current location, severity, time sensitivity, crowd level, and preferred slot(Optional).
-    '''
-
-    category = get_category(VALID_CATEGORIES)
-    print_list("Available Locations", VALID_LOCATIONS)
-    current_location = get_location("Enter Current Location: ", VALID_LOCATIONS)
-
-    severity = get_severity()
-    time_sensitivity = get_time_sensitivity()
-    crowd_level = get_crowd_level()
-    preferred_slot = get_preferred_slot(allow_skip=True)
-
-    return category, current_location, severity, time_sensitivity, crowd_level, preferred_slot
-
-
-def get_full_service_inputs():
-    category = get_category(VALID_CATEGORIES)
-    print_list("Available Locations", VALID_LOCATIONS)
-    current_location = get_location("Enter Current Location: ", VALID_LOCATIONS)
-
-    preferred_slot = get_preferred_slot()
-    severity = get_severity()
-    time_sensitivity = get_time_sensitivity()
-    crowd_level = get_crowd_level()
-    description_note = get_description()
-
-    return (
-        category, current_location, preferred_slot, severity, 
-        time_sensitivity, crowd_level, description_note
-    )
-
 
 
 def get_user_input(): 
@@ -116,27 +41,27 @@ def get_user_input():
 
     if request_type == "Navigation_Only": 
         print_list("Available Locations", VALID_LOCATIONS)
-        current_location, destination = get_navigation_inputs()
+        current_location, destination = get_navigation_inputs(VALID_LOCATIONS)
          
     elif request_type == "Eligibility_Check":
         query = get_eligibility_inputs() 
 
     elif request_type == "Booking_or_Scheduling":
         print_list("Available Categories", VALID_CATEGORIES)
-        category, preferred_slot, group_id = get_booking_inputs()
+        category, preferred_slot, group_id = get_booking_inputs(VALID_CATEGORIES)
 
         if get_yes_no("Do you need route guidance? (yes/no): ") == "yes":
             print_list("Available Locations", VALID_LOCATIONS)
-            current_location = get_location("Enter Current Location: ", VALID_LOCATIONS)
+            current_location = get_validated_input("Enter Current Location: ", VALID_LOCATIONS, None)
 
     elif request_type == "Urgent_Service_Request":
         (category, current_location, 
         severity, time_sensitivity, 
-        crowd_level, preferred_slot) = get_urgent_service_inputs()
+        crowd_level, preferred_slot) = get_urgent_service_inputs(VALID_CATEGORIES, VALID_LOCATIONS)
 
     elif request_type == "Full_Service_Request":
         (category, current_location, preferred_slot, severity, 
-         time_sensitivity, crowd_level, description_note) = get_full_service_inputs()
+         time_sensitivity, crowd_level, description_note) = get_full_service_inputs(VALID_CATEGORIES, VALID_LOCATIONS)
 
     return {
         "name": name,
