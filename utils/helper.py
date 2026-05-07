@@ -111,6 +111,19 @@ def validate_query(query: str) -> bool:
     '''
     return "(" in query and ")" in query and len(query) > 3
 
+
+def print_dict(data: Dict[str, Any], title: str)-> None: 
+    '''
+    Print a dictionary in a readable format.
+    Args:
+        data (Dict[str, Any]): The dictionary to print.
+        title (str): The title for the dictionary.
+    '''
+    print() 
+    for key, value in data.items():
+        print(f"{key}: {value}")
+    print() 
+
 # ===============================================================================
 # Code below this is for handling possible fields based on different request types, 
 # I put them separately to make the main get_user_input function cleaner and more modular.
