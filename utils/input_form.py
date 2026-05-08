@@ -50,7 +50,7 @@ def get_user_input():
         print_list("Available Categories", VALID_CATEGORIES)
         category, preferred_slot, group_id = get_booking_inputs(VALID_CATEGORIES)
 
-        if get_yes_no("Do you need route guidance? (yes/no): ") == "yes":
+        if get_yes_no("Do you need route guidance? (yes(y)/no(n)): ") in ["yes", "y"]:
             print_list("Available Locations", VALID_LOCATIONS)
             current_location = get_validated_input("Enter Current Location: ", VALID_LOCATIONS, None)
 

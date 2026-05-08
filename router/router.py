@@ -1,6 +1,6 @@
 import utils.input_form as input_form
 from utils.preprocess import preprocess_request
-from router.handler import navigate_only, eligibility_check
+from router.handler import navigate_only, eligibility_check, booking_or_scheduling
 from utils.helper import print_dict
 import random 
 from typing import *
@@ -24,7 +24,7 @@ def route():
    
     if request_type == "Navigation_Only":
         searched_output = navigate_only(processed_output)
-        print("Search Output: ", searched_output)
+        print_dict(searched_output, "Search Output")
         return {
             "request_id": "REQ401",
             "decision": "completed",
@@ -36,7 +36,7 @@ def route():
 
     elif request_type == "Eligibility_Check":
         eligibility_output = eligibility_check(processed_output) 
-        print("Eligibility Check Output: ", eligibility_output)
+        print_dict(eligibility_output, "Eligibility Check Output")
         return {
             "request_id": "REQ402",
             "decision": "answered" if eligibility_output["entailed"] else "rejected",
@@ -47,8 +47,30 @@ def route():
         }
     
     elif request_type == "Booking_or_Scheduling":
-        # TODO: Implement the logic to handle booking or scheduling requests
-        pass
+        booking_output = booking_or_scheduling(processed_output)
+        print_dict(booking_output, "Booking Output")
+
+        assignment = booking_output.get("assignment") or {}
+        route      = booking_output.get("route") or {}
+
+        return {
+            "request_id":  request_id,
+            "decision":    booking_output["decision"],
+            "eligibility": {
+                "allowed":     booking_output["eligibility"].get("allowed", False),
+                "explanation": booking_output["eligibility"].get("explanation", "")
+            },
+            "assignment": {
+                "room": assignment.get("assigned_room"),
+                "slot": assignment.get("assigned_slot")
+            },
+            "route":    route,
+            "message": (
+                f"Booking accepted. You are assigned {assignment.get('assigned_room')} in slot {assignment.get('assigned_slot')}."
+                if booking_output["decision"] == "accepted"
+                else "Booking request rejected."
+            )
+        }
 
     elif request_type == "Urgent_Service_Request":
         # TODO: Implement the logic to handle urgent service requests

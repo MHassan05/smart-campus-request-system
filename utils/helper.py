@@ -149,6 +149,7 @@ def print_dict(data: Dict[str, Any], title: str)-> None:
         title (str): The title for the dictionary.
     '''
     print() 
+    print(f"{title}:")
     for key, value in data.items():
         print(f"{key}: {value}")
     print() 
