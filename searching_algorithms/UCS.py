@@ -1,4 +1,5 @@
 from typing import Dict, List, Tuple
+import heapq 
 
 def ucs(graph: Dict[str, List[Tuple[str, int]]], start: str, goal: str) -> Tuple[List[str], int, int]: 
     '''
@@ -12,20 +13,17 @@ def ucs(graph: Dict[str, List[Tuple[str, int]]], start: str, goal: str) -> Tuple
     Returns:
         Tuple[List[str], int, int]: A tuple containing the path from start to goal, the total cost of that path, and the number of steps taken.
     '''
-    visited = set() 
+    visited = set()
     steps = 0
-    queue = [(0, start, [start])]  
-
-    while queue: 
-        cost, current_node, path = queue.pop(0) 
+    queue = [(0, start, [start])]
+    while queue:
+        cost, current_node, path = heapq.heappop(queue)
         steps += 1
-
-        if current_node == goal: 
+        if current_node == goal:
             return path, cost, steps
-        if current_node not in visited: 
-            visited.add(current_node) 
-            for neighbor, cost in graph[current_node]: 
-                if neighbor not in visited: 
-                    queue.append((cost + cost, neighbor, path + [neighbor]))
-                    queue.sort(key=lambda x: x[0])  
+        if current_node not in visited:
+            visited.add(current_node)
+            for neighbor, edge_cost in graph[current_node]:
+                if neighbor not in visited:
+                    heapq.heappush(queue, (cost + edge_cost, neighbor, path + [neighbor]))
     return None, float('inf'), steps

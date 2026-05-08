@@ -2,158 +2,98 @@ from typing import Dict, Tuple, List
 import heapq
 import math
 
+def a_star(graph: Dict[str, Dict[str, int]], heuristics: Dict[str, Tuple[int, int]], start: str, goal: str) -> Tuple[List[str], int, int]: 
+    '''
+    We will be using Euclidean distance as the heuristic for A* search. 
+    Because the shortest path between two points is a straight line, the Euclidean distance 
+    provides an admissible heuristic that never overestimates the true cost to reach the goal.
+    Args:
+        graph (Dict[str, Dict[str, int]]): The weighted graph representing the campus layout.
+        heuristics (Dict[str, Tuple[int, int]]): A dictionary containing heuristic values for each node.
+        start (str): The starting location.
+        goal (str): The destination location.
+    Returns:
+        Tuple[List[str], int, int]: A tuple containing the optimal path, total cost, and number of steps taken.
+    '''
 
-def heuristic_distance(
-    node: str,
-    goal: str,
-    heuristics: Dict[str, Tuple[int, int]]
-) -> float:
+    def euclidean(a, b):
+        raw = math.sqrt((heuristics[a][0] - heuristics[b][0])**2 + (heuristics[a][1] - heuristics[b][1])**2)
+        return raw * 0.5 # Multiplied by 0.5 to scale down the heuristic values for better performance
 
-    x1, y1 = heuristics[node]
-    x2, y2 = heuristics[goal]
-
-    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-
-
-def a_star(graph, heuristics, start, goal):
-
-    # (f_cost, g_cost, current_node, path)
     open_set = []
-
-    start_h = heuristic_distance(start, goal, heuristics)
-
-    heapq.heappush(
-        open_set,
-        (start_h, 0, start, [start])
-    )
-
-    g_costs = {start: 0}
-
-    visited = set()
-
+    heapq.heappush(open_set, (0, start))
+    came_from = {}
+    g_score = {node: float('inf') for node in graph}
+    g_score[start] = 0
     steps = 0
 
     while open_set:
-
-        f_cost, current_g, current_node, path = heapq.heappop(open_set)
-
+        _, current = heapq.heappop(open_set)
         steps += 1
 
-        if current_node == goal:
-            return path, current_g, steps
+        if current == goal:
+            path = []
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            path.append(start)
+            return path[::-1], g_score[goal], steps
 
-        if current_node in visited:
-            continue
+        for neighbor, weight in graph[current].items():
+            tentative_g = g_score[current] + weight
+            if tentative_g < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                f_score = tentative_g + euclidean(neighbor, goal)
+                heapq.heappush(open_set, (f_score, neighbor))
 
-        visited.add(current_node)
+    return [], -1, steps
 
-        for neighbor, edge_cost in graph.get(current_node, {}).items():
-
-            tentative_g = current_g + edge_cost
-
-            if neighbor not in g_costs or tentative_g < g_costs[neighbor]:
-
-                g_costs[neighbor] = tentative_g
-
-                h = heuristic_distance(
-                    neighbor,
-                    goal,
-                    heuristics
-                )
-
-                f = tentative_g + h
-
-                heapq.heappush(
-                    open_set,
-                    (f, tentative_g, neighbor, path + [neighbor])
-                )
-
-    return [], float("inf"), steps
 
 if __name__ == "__main__":
-
     campus_weighted_graph = {
-
         "Main_Gate": {
-            "Admin_Block": 4,
-            "Parking": 2,
-            "Bus_Stop": 1,
-            "Hostel": 5
-        },
-
+            "Admin_Block": 4, "Parking": 2, "Bus_Stop": 1, "Hostel": 5
+            },
         "Admin_Block": {
-            "Main_Gate": 4,
-            "Student_Services": 1,
-            "Exam_Hall": 2
-        },
-
+            "Main_Gate": 4, "Student_Services": 1, "Exam_Hall": 2
+            },
         "Student_Services": {
-            "Admin_Block": 1,
-            "Library": 2
-        },
-
+            "Admin_Block": 1, "Library": 2
+            },
         "Exam_Hall": {
-            "Admin_Block": 2,
-            "Seminar_Room": 1,
-            "Science_Block": 3
-        },
-
+            "Admin_Block": 2, "Seminar_Room": 1, "Science_Block": 3
+            },
         "Seminar_Room": {
-            "Exam_Hall": 1,
-            "Science_Block": 2
-        },
-
+            "Exam_Hall": 1, "Science_Block": 2
+            },
         "Parking": {
-            "Main_Gate": 2,
-            "Bus_Stop": 2,
-            "Science_Block": 3
+            "Main_Gate": 2, "Bus_Stop": 2, "Science_Block": 3
         },
-
         "Bus_Stop": {
-            "Main_Gate": 1,
-            "Parking": 2,
-            "Medical_Center": 2
+            "Main_Gate": 1, "Parking": 2, "Medical_Center": 2
         },
-
         "Medical_Center": {
-            "Bus_Stop": 2,
-            "Hostel": 3
+            "Bus_Stop": 2, "Hostel": 3
         },
-
         "Hostel": {
-            "Main_Gate": 5,
-            "Medical_Center": 3,
-            "Cafeteria": 2
+            "Main_Gate": 5, "Medical_Center": 3, "Cafeteria": 2
         },
-
         "Cafeteria": {
-            "Hostel": 2,
-            "Library": 2,
-            "Science_Block": 3
+            "Hostel": 2, "Library": 2, "Science_Block": 3
         },
-
         "Library": {
-            "Student_Services": 2,
-            "Cafeteria": 2,
-            "AI_Lab": 3
+            "Student_Services": 2, "Cafeteria": 2, "AI_Lab": 3
         },
-
         "Science_Block": {
-            "Parking": 3,
-            "Exam_Hall": 3,
-            "Seminar_Room": 2,
-            "Cafeteria": 3,
-            "AI_Lab": 1
+            "Parking": 3, "Exam_Hall": 3, "Seminar_Room": 2, "Cafeteria": 3, "AI_Lab": 1
         },
-
         "AI_Lab": {
-            "Library": 3,
-            "Science_Block": 1
+            "Library": 3, "Science_Block": 1
         }
     }
 
     heuristics = {
-
         "Main_Gate": (0, 4),
         "Admin_Block": (3, 5),
         "Student_Services": (6, 5),
@@ -169,19 +109,18 @@ if __name__ == "__main__":
         "AI_Lab": (9, 2)
     }
 
-    start = "Main_Gate"
-    goal = "AI_Lab"
+    test_cases = [
+        ("Hostel", "AI_Lab"), 
+        ("Main_Gate", "AI_Lab"),
+        ("Bus_Stop", "Seminar_Room"),
+        ("Hostel", "Exam_Hall"),
+        ("Parking", "Library"),
+    ]
 
-    path, cost, steps = a_star(
-        campus_weighted_graph,
-        heuristics,
-        start,
-        goal
-    )
-
-    print("\n===== A* SEARCH RESULT =====")
-    print("Start Node :", start)
-    print("Goal Node  :", goal)
-    print("Path Found :", " -> ".join(path))
-    print("Total Cost :", cost)
-    print("Steps Taken:", steps)
+    for start, goal in test_cases:
+        path, cost, steps = a_star(campus_weighted_graph, heuristics, start, goal)
+        print(f"Start: {start} -> Goal: {goal}")
+        print(f"  Path  : {' -> '.join(path)}")
+        print(f"  Cost  : {cost}")
+        print(f"  Steps : {steps}")
+        print()
