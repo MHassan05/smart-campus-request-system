@@ -103,13 +103,42 @@ def get_request_type(request_type_map: Dict[str, str]) -> str:
     ) 
 
 
-def validate_query(query: str) -> bool:
+def get_menu_choice(valid_choices: list[str]) -> str:
     '''
-    Validate user's query for eligibility checks.
-    Returns:
-        bool: True if the query is valid, False otherwise.
+    Get validated menu choice from user.
+    Args: 
+        valid_choices (list[str]): A list of valid choices to select from.
+    Returns: 
+        str: Validated user input in str format. 
     '''
-    return "(" in query and ")" in query and len(query) > 3
+
+    while True:
+
+        choice = input("Enter choice: ").strip()
+
+        if choice in valid_choices:
+            return choice
+
+        print("Invalid choice. Try again.")
+
+
+def get_non_empty_input(field_name: str) -> str:
+    '''
+    Get non-empty input from user.
+    Args: 
+        field_name (str): The name of the field for which input is being requested. 
+    Returns: 
+        str: User input in str format. 
+    '''
+
+    while True:
+
+        value = input(f"Enter {field_name}: ").strip()
+
+        if value:
+            return value
+
+        print(f"{field_name} cannot be empty.")
 
 
 def print_dict(data: Dict[str, Any], title: str)-> None: 
@@ -156,19 +185,47 @@ def get_navigation_inputs(valid_locations: List[str]) -> Tuple[str, str]:
     return current_location, destination
 
 
-def get_eligibility_inputs() -> str:
+def get_eligibility_inputs(role: str, name: str) -> str | None:
     '''
     Get and validate user's query for eligibility checks.
+    Args:
+        role (str): The user's role.
+        name (str): The user's name.
     Returns:
-        str: The validated user query.
+        str | None: The validated FOL query string, or None if invalid.
     '''
+    if role == "Student":
+        print("\nEligibility Options:")
+        print("1. Check AI Course Eligibility")   
+        print("2. Check Lab Access")              
+        choice = get_menu_choice(["1", "2"])
 
-    while True:
-        query = input("Enter Query (e.g. UsesLab(DrKhan, Lab1)): ").strip()
-        if validate_query(query):
-            return query
-        print("Invalid query format.")
+        if choice == "1":
+            course = get_non_empty_input("Course Name (e.g. AI)")
+            return f"Eligible({name}, {course})"
 
+        elif choice == "2":
+            lab = get_non_empty_input("Lab Name (e.g. Lab1)")
+            return f"UsesLab({name}, {lab})"
+
+    elif role == "Instructor":
+        print("\nEligibility Options:")
+        print("1. Check Instructor Status")        
+        print("2. Check Lab Access")               
+        choice = get_menu_choice(["1", "2"])
+
+        if choice == "1":
+            course = get_non_empty_input("Course Name (e.g. AI)")
+            return f"Instructor({name}, {course})"  
+        elif choice == "2":
+            lab = get_non_empty_input("Lab Name (e.g. Lab1)")
+            return f"UsesLab({name}, {lab})"
+
+    else:
+        # Staff or unknown roles have no rules in this KB
+        print(f"Role '{role}' has no eligibility rules defined in the current Knowledge Base.")
+        return None
+    
 
 def get_booking_inputs(valid_categories: List[str]) -> Tuple[str, int, str | None]:
     '''

@@ -1,7 +1,7 @@
 from utils.graph_data import campus_unweighted_graph 
 from utils.helper import * 
 
-# Available roles, categories, locations, and request types  
+# Available roles, categories, locations, and request types 
 VALID_ROLES = ["Student", "Instructor", "Staff"]
 VALID_CATEGORIES = ["AI_Lab_Support", "Viva", "Access", "Maintenance"]
 VALID_LOCATIONS = list(campus_unweighted_graph.keys())
@@ -44,7 +44,7 @@ def get_user_input():
         current_location, destination = get_navigation_inputs(VALID_LOCATIONS)
          
     elif request_type == "Eligibility_Check":
-        query = get_eligibility_inputs() 
+        query = get_eligibility_inputs(role, name) 
 
     elif request_type == "Booking_or_Scheduling":
         print_list("Available Categories", VALID_CATEGORIES)

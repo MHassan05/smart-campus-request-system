@@ -3,6 +3,7 @@ from typing import *
 from utils.helper import get_validated_input, print_dict
 from searching_algorithms import A_STAR, BFS, UCS
 from utils.graph_data import campus_unweighted_graph, campus_weighted_graph, heuristics
+from logic_kb import logic_engine
 
 
 def select_pipeline(request_type: str) -> List[str]:
@@ -83,3 +84,35 @@ def navigate_only(processed_output: Dict[str, Any]) -> Dict[str, Any]:
             "cost": cost,
             "steps": steps
         }
+
+
+def eligibility_check(processed_output: Dict[str, Any]) -> Dict[str, Any]:
+    '''
+    Handle eligibility check requests by querying the logic knowledge base.
+    
+    Args:
+        processed_output (Dict[str, Any]): The preprocessed request output containing user role and query information.
+    
+    Returns:
+        Dict[str, Any]: A dictionary containing the eligibility result and relevant details.
+    '''
+    query = processed_output.get("query")
+
+    if query is None: 
+        return {
+            "query": None,
+            "entailed": False,
+            "explanation": "No valid query provided in the request."
+        }
+
+    result = logic_engine.ask_query(query)
+
+    print_dict(processed_output, "Preprocessed Output")
+
+    print_dict({
+        "request_id": processed_output.get("request_id"),
+        "selected_pipeline": select_pipeline(processed_output.get("request_type"))
+    }, "Router Output")
+
+    return result 
+    

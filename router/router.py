@@ -1,6 +1,6 @@
 import utils.input_form as input_form
 from utils.preprocess import preprocess_request
-from router.handler import navigate_only
+from router.handler import navigate_only, eligibility_check
 from utils.helper import print_dict
 import random 
 from typing import *
@@ -35,9 +35,17 @@ def route():
         }
 
     elif request_type == "Eligibility_Check":
-        # TODO: Implement the logic to handle eligibility check requests
-        pass
-
+        eligibility_output = eligibility_check(processed_output) 
+        print("Eligibility Check Output: ", eligibility_output)
+        return {
+            "request_id": "REQ402",
+            "decision": "answered" if eligibility_output["entailed"] else "rejected",
+            "eligibility": {
+                **eligibility_output
+            },
+            "message": "Eligibility check answered successfully." if eligibility_output["entailed"] else "Eligibility check failed."
+        }
+    
     elif request_type == "Booking_or_Scheduling":
         # TODO: Implement the logic to handle booking or scheduling requests
         pass
