@@ -7,7 +7,7 @@ CATEGORY_TO_FOL_MAP = {
     "Maintenance":    ("Eligible", "AI"),
 }
 
-def _build_booking_query(role: str, name: str, category: str) -> Optional[str]:
+def build_booking_query(role: str, name: str, category: str) -> Optional[str]:
     '''
     Auto-build a FOL query from role, name, and category for booking eligibility check.
     Args:
@@ -66,7 +66,7 @@ def preprocess_request(user_input: Dict[str, Any], request_id: str) -> Dict[str,
             "needs_search": False
          }
     elif user_input["request_type"] == "Booking_or_Scheduling":
-        query = _build_booking_query(
+        query = build_booking_query(
             user_input["role"],
             user_input["name"],
             user_input["category"]
@@ -85,4 +85,54 @@ def preprocess_request(user_input: Dict[str, Any], request_id: str) -> Dict[str,
             "needs_logic":      True,
             "needs_csp":        True,
             "needs_search":     user_input["current_location"] is not None
+        }
+    elif user_input["request_type"] == "Urgent_Service_Request":
+        query = build_booking_query(
+            user_input["role"],
+            user_input["name"],
+            user_input["category"]
+        )
+        return {
+            "request_id":       request_id,
+            "name":             user_input["name"],
+            "role":             user_input["role"],
+            "request_type":     user_input["request_type"],
+            "category":         user_input["category"],
+            "current_location": user_input["current_location"],
+            "preferred_slot":   user_input["preferred_slot"],
+            "severity":         user_input["severity"],
+            "time_sensitivity": user_input["time_sensitivity"],
+            "crowd_level":      user_input["crowd_level"],
+            "query":            query,
+            "group_id":         user_input["group_id"],
+            "needs_ann":        True,
+            "needs_logic":      True,
+            "needs_csp":        True,
+            "needs_search":     True
+        }
+
+    elif user_input["request_type"] == "Full_Service_Request":
+        query = build_booking_query(
+        user_input["role"],
+        user_input["name"],
+        user_input["category"]
+        )
+        return {
+            "request_id":       request_id,
+            "name":             user_input["name"],
+            "role":             user_input["role"],
+            "request_type":     user_input["request_type"],
+            "category":         user_input["category"],
+            "current_location": user_input["current_location"],
+            "preferred_slot":   user_input["preferred_slot"],
+            "severity":         user_input["severity"],
+            "time_sensitivity": user_input["time_sensitivity"],
+            "crowd_level":      user_input["crowd_level"],
+            "description_note": user_input["description_note"],
+            "query":            query,
+            "group_id":         user_input["group_id"],
+            "needs_ann":        True,
+            "needs_logic":      True,
+            "needs_csp":        True,
+            "needs_search":     True
         }

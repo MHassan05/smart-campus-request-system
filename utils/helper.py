@@ -274,12 +274,12 @@ def get_urgent_service_inputs(valid_categories: List[str], valid_locations: List
     category = get_validated_input(
         "Enter Category (1-{}): ".format(len(valid_categories)),
         valid_categories,
-        None 
+        "Available Categories" 
     )
     current_location = get_validated_input(
         "Enter Current Location (1-{}): ".format(len(valid_locations)),
         valid_locations,
-        None 
+        "Available Locations"
     )
     severity = get_int_in_range("Enter Severity (1-10): ", 1, 10)
     time_sensitivity = get_int_in_range("Enter Time Sensitivity (1-10): ", 1, 10)
@@ -301,12 +301,12 @@ def get_full_service_inputs(valid_categories: List[str], valid_locations: List[s
     category = get_validated_input(
         "Enter Category (1-{}): ".format(len(valid_categories)),
         valid_categories,
-        None 
+        "Available Categories"
     )
     current_location = get_validated_input(
         "Enter Current Location (1-{}): ".format(len(valid_locations)),
         valid_locations,
-        None 
+        "Available Locations"
     )
     preferred_slot = get_int_in_range("Enter Preferred Slot (1-4): ", 1, 4)
     severity = get_int_in_range("Enter Severity (1-10): ", 1, 10)

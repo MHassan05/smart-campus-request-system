@@ -1,6 +1,7 @@
 import utils.input_form as input_form
 from utils.preprocess import preprocess_request
-from router.handler import navigate_only, eligibility_check, booking_or_scheduling
+from router.handler import (navigate_only, eligibility_check, booking_or_scheduling,
+                             urgent_service_request, full_service_request)
 from utils.helper import print_dict
 import random 
 from typing import *
@@ -15,7 +16,13 @@ def generate_request_id() -> str:
     return request_id 
 
 
-def route():
+def route() -> Optional[Dict[str, Any]]:
+    '''
+    Main routing function that collects user input, preprocesses it, and dispatches
+    it to the appropriate handler based on request type.
+    Returns:
+        Optional[Dict[str, Any]]: The final response dictionary, or None if unhandled.
+    '''
     user_input = input_form.get_user_input()
     request_id = generate_request_id()
     processed_output = preprocess_request(user_input, request_id)
@@ -26,7 +33,7 @@ def route():
         searched_output = navigate_only(processed_output)
         print_dict(searched_output, "Search Output")
         return {
-            "request_id": "REQ401",
+            "request_id": request_id,
             "decision": "completed",
             "route": {
                 **searched_output
@@ -38,7 +45,7 @@ def route():
         eligibility_output = eligibility_check(processed_output) 
         print_dict(eligibility_output, "Eligibility Check Output")
         return {
-            "request_id": "REQ402",
+            "request_id": request_id,
             "decision": "answered" if eligibility_output["entailed"] else "rejected",
             "eligibility": {
                 **eligibility_output
@@ -73,14 +80,78 @@ def route():
         }
 
     elif request_type == "Urgent_Service_Request":
-        # TODO: Implement the logic to handle urgent service requests
-        pass 
+        output = urgent_service_request(processed_output)
+        ann        = output["ann"]
+        eligibility = output["eligibility"]
+        csp        = output["csp"]
+        route      = output["route"]
+
+        if not eligibility["allowed"] or (csp and csp["decision"] == "rejected"):
+            return {
+                "request_id": request_id,
+                "decision":   "rejected",
+                "priority":   ann,
+                "eligibility": eligibility,
+                "message":    "Your urgent request was rejected."
+            }
+
+        response = {
+            "request_id":  request_id,
+            "decision":    "accepted",
+            "priority": {
+                "binary_priority": ann["binary_priority"],
+                "final_priority":  ann["final_priority"],
+                "confidence":      ann["confidence"]
+            },
+            "eligibility": eligibility,
+            "assignment": {
+                "room":  csp["assigned_room"],
+                "slot":  csp["assigned_slot"],
+                "notes": csp["notes"]
+            },
+            "message": f"Urgent request accepted. Assigned {csp['assigned_room']} slot {csp['assigned_slot']}."
+        }
+
+        if route:
+            response["route"] = route
+
+        return response 
 
     elif request_type == "Full_Service_Request":
-        # TODO: Implement the logic to handle full service requests
-        pass
+        output = full_service_request(processed_output)
+        ann         = output["ann"]
+        eligibility = output["eligibility"]
+        csp         = output["csp"]
+        route       = output["route"]
 
-    return None # TODO: Finalize the return value based on the implementation
+        if not eligibility["allowed"] or (csp and csp["decision"] == "rejected"):
+            return {
+                "request_id":  request_id,
+                "decision":    "rejected",
+                "priority":    ann,
+                "eligibility": eligibility,
+                "message":     "Your full service request was rejected."
+            }
+
+        return {
+            "request_id": request_id,
+            "decision":   "accepted",
+            "priority": {
+                "binary_priority": ann["binary_priority"],
+                "final_priority":  ann["final_priority"],
+                "confidence":      ann["confidence"]
+            },
+            "eligibility": eligibility,
+            "assignment": {
+                "room":  csp["assigned_room"],
+                "slot":  csp["assigned_slot"],
+                "notes": csp["notes"]
+            },
+            "route":    route,
+            "message":  f"Full service accepted. Assigned {csp['assigned_room']} slot {csp['assigned_slot']}. Follow the route guidance."
+        }
+
+    return None 
 
 if __name__ == "__main__":
     route()

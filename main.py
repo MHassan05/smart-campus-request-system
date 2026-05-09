@@ -1,6 +1,7 @@
-from router.router import route 
-import os 
-from typing import * 
+from router.router import route
+import os
+from typing import *
+
 
 def print_final_response(response: Dict[str, Any]) -> None:
     '''
@@ -17,20 +18,31 @@ def print_final_response(response: Dict[str, Any]) -> None:
         else:
             print(f"{key}: {value}")
 
-def menu():
-    print("Welcome to the Service Request System!")
-    print("1. Submit a new request")
-    print("2. Exit")
-    choice = input("Enter your choice (1-2): ").strip()
-    while choice not in ["1", "2"]:
-        print("Invalid choice. Please enter 1 or 2.")
+
+def menu() -> None:
+    '''
+    Display the main menu and handle user navigation.
+    Loops until the user chooses to exit.
+    '''
+    while True:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print("Welcome to the Smart Campus Service Request System!")
+        print("1. Submit a new request")
+        print("2. Exit")
+
         choice = input("Enter your choice (1-2): ").strip()
-    if choice == "1":
+        while choice not in ["1", "2"]:
+            print("Invalid choice. Please enter 1 or 2.")
+            choice = input("Enter your choice (1-2): ").strip()
+
+        if choice == "2":
+            print("Thank you for using the Service Request System. Goodbye!")
+            break
+
         final_response = route()
         print_final_response(final_response)
-    else:
-        print("Thank you for using the Service Request System. Goodbye!")
+        input("\nPress Enter to continue...")
+
 
 if __name__ == "__main__":
-    os.system('cls' if os.name == 'nt' else 'clear')  
-    menu() 
+    menu()

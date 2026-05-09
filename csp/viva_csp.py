@@ -19,7 +19,7 @@ CONSTRAINTS = {
 }
 
 
-def _is_consistent(group: str, slot: int, assignment: Dict[str, int]) -> bool:
+def is_consistent(group: str, slot: int, assignment: Dict[str, int]) -> bool:
     for constraint_type in ["slot_conflict", "examiner_clash", "supervisor_clash"]:
         for (a, b) in CONSTRAINTS[constraint_type]:
             if group == a and assignment.get(b) == slot:
@@ -52,7 +52,7 @@ def solve_viva() -> Optional[Dict[str, int]]:
             return True
         group = groups[index]
         for slot in SLOT_DOMAIN:
-            if _is_consistent(group, slot, assignment):
+            if is_consistent(group, slot, assignment):
                 assignment[group] = slot
                 if backtrack(index + 1):
                     return True

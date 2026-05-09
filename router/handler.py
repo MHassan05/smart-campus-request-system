@@ -5,6 +5,7 @@ from searching_algorithms import A_STAR, BFS, UCS
 from utils.graph_data import campus_unweighted_graph, campus_weighted_graph, heuristics
 from logic_kb import logic_engine
 from csp.csp_solver import csp_assign
+from ann.ann_engine import run_ann
 
 def select_pipeline(request_type: str) -> List[str]:
     '''
@@ -201,4 +202,135 @@ def booking_or_scheduling(processed_output: Dict[str, Any]) -> Dict[str, Any]:
         "assignment":  csp_result,
         "route":       route_output,
         "decision":    "accepted"
+    }
+
+
+def urgent_service_request(processed_output: Dict[str, Any]) -> Dict[str, Any]:
+    '''
+    Handle urgent service requests using ANN → Logic → CSP → optional Search pipeline.
+    Args:
+        processed_output (Dict[str, Any]): The preprocessed request output.
+    Returns:
+        Dict[str, Any]: Combined ANN, eligibility, CSP, and optional route results.
+    '''
+    print_dict(processed_output, "Preprocessed Output")
+
+    print_dict({
+        "request_id":       processed_output.get("request_id"),
+        "selected_pipeline": select_pipeline(processed_output.get("request_type"))
+    }, "Router Output")
+
+    # ANN
+    ann_result = run_ann(processed_output, distance=4, eligibility=True)
+
+    # Logic KB check
+    query = processed_output.get("query")
+    if query:
+        logic_result = logic_engine.ask_query(query)
+        eligibility_result = {
+            "allowed":     logic_result["entailed"],
+            "explanation": logic_result["explanation"]
+        }
+    else:
+        eligibility_result = {
+            "allowed":     True,
+            "explanation": "No logic query provided; access assumed allowed."
+        }
+
+    if not eligibility_result["allowed"]:
+        return {
+            "ann":         ann_result,
+            "eligibility": eligibility_result,
+            "csp":         None,
+            "route":       None
+        }
+
+    # CSP
+    csp_result = csp_assign(
+        processed_output.get("category"),
+        processed_output.get("preferred_slot"),
+        processed_output.get("group_id")
+    )
+
+    # Search
+    route_result = None
+    if csp_result["decision"] == "accepted":
+        path, steps = BFS.bfs(campus_unweighted_graph, processed_output["current_location"], csp_result["destination"])
+        route_result = {
+            "algorithm_used": "BFS",
+            "path":           path,
+            "steps":          steps
+        }
+
+    return {
+        "ann":         ann_result,
+        "eligibility": eligibility_result,
+        "csp":         csp_result,
+        "route":       route_result
+    }
+
+
+def full_service_request(processed_output: Dict[str, Any]) -> Dict[str, Any]:
+    '''
+    Handle full service requests using ANN → Logic → CSP → Search pipeline.
+    Args:
+        processed_output (Dict[str, Any]): The preprocessed request output.
+    Returns:
+        Dict[str, Any]: Combined ANN, eligibility, CSP, and route results.
+    '''
+    print_dict(processed_output, "Preprocessed Output")
+
+    print_dict({
+        "request_id":        processed_output.get("request_id"),
+        "selected_pipeline": select_pipeline(processed_output.get("request_type"))
+    }, "Router Output")
+
+    # ANN
+    ann_result = run_ann(processed_output, distance=4, eligibility=True)
+
+    # Logic KB check
+    query = processed_output.get("query")
+    if query:
+        logic_result = logic_engine.ask_query(query)
+        eligibility_result = {
+            "allowed":     logic_result["entailed"],
+            "explanation": logic_result["explanation"]
+        }
+    else:
+        eligibility_result = {
+            "allowed":     True,
+            "explanation": "No logic query provided; access assumed allowed."
+        }
+
+    if not eligibility_result["allowed"]:
+        return {
+            "ann":         ann_result,
+            "eligibility": eligibility_result,
+            "csp":         None,
+            "route":       None
+        }
+
+    # CSP
+    csp_result = csp_assign(
+        processed_output.get("category"),
+        processed_output.get("preferred_slot"),
+        processed_output.get("group_id")
+    )
+
+    # Search — always runs for Full_Service_Request
+    route_result = None
+    if csp_result["decision"] == "accepted":
+        path, cost, steps = A_STAR.a_star(campus_weighted_graph, heuristics, processed_output["current_location"], csp_result["destination"])
+        route_result = {
+            "algorithm_used": "A*",
+            "path":           path,
+            "cost":           cost,
+            "steps":          steps
+        }
+
+    return {
+        "ann":         ann_result,
+        "eligibility": eligibility_result,
+        "csp":         csp_result,
+        "route":       route_result
     }

@@ -36,7 +36,7 @@ EXPLANATIONS = {
     ]
 }
 
-def _get_explanation(query: str) -> list:
+def get_explanation(query: str) -> list:
     '''
     Get the explanation for an entailed query from the EXPLANATIONS dictionary.
     
@@ -74,6 +74,6 @@ def ask_query(query: str) -> Dict[str, Any]:
     return {
         "query":       query,
         "entailed":    entailed,
-        "explanation": _get_explanation(query) if entailed else []
+        "explanation": get_explanation(query) if entailed else []
     }
 
