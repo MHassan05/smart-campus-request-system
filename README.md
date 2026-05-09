@@ -95,15 +95,15 @@ python main.py
 ---
 
 ## Example: Full Service Request
-Name: Ali
-Role: Student
-Request Type: Full_Service_Request
-Category: AI_Lab_Support
-Current Location: Hostel
-Preferred Slot: 2
-Severity: 8
-Time Sensitivity: 9
-Crowd Level: 5
+Name: Ali  
+Role: Student  
+Request Type: Full_Service_Request  
+Category: AI_Lab_Support  
+Current Location: Hostel  
+Preferred Slot: 2  
+Severity: 8  
+Time Sensitivity: 9   
+Crowd Level: 5  
 Expected output includes ANN priority prediction, logic
 eligibility check, CSP room and slot assignment, and
 A* route from Hostel to AI_Lab.
@@ -121,5 +121,5 @@ A* route from Hostel to AI_Lab.
 ---
 
 ## Course
-Artificial Intelligence — Semester Project  
+Artificial Intelligence Lab — Semester Project  
 Department of Computer Science
