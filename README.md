@@ -9,6 +9,7 @@ Artificial Neural Networks.
 
 ## Project Structure
 
+```
 smart-campus-request-system/
 │
 ├── main.py                  # Entry point
@@ -36,10 +37,11 @@ smart-campus-request-system/
 │   └── viva_csp.py          # Backtracking CSP solver for Viva scheduling
 │
 └── ann/
-├── ann_engine.py        # Public ANN interface
-├── ann_data.py          # Feature encodings and vector builder
-├── perceptron.py        # Binary classifier: urgent vs not_urgent
-└── mlp.py               # Multiclass classifier: Low/Normal/High/Urgent  
+    ├── ann_engine.py        # Public ANN interface
+    ├── ann_data.py          # Feature encodings and vector builder
+    ├── perceptron.py        # Binary classifier: urgent vs not_urgent
+    └── mlp.py               # Multiclass classifier: Low/Normal/High/Urgent
+```
 
 ---
 
