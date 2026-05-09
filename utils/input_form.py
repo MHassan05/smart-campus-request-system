@@ -47,7 +47,6 @@ def get_user_input():
         query = get_eligibility_inputs(role, name) 
 
     elif request_type == "Booking_or_Scheduling":
-        print_list("Available Categories", VALID_CATEGORIES)
         category, preferred_slot, group_id = get_booking_inputs(VALID_CATEGORIES)
 
         if get_yes_no("Do you need route guidance? (yes(y)/no(n)): ") in ["yes", "y"]:

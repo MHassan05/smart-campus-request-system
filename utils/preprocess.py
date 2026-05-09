@@ -1,10 +1,10 @@
 from typing import * 
 
-CATEGORY_TO_FOL_MAP = {
-    "AI_Lab_Support": ("UsesLab", "Lab1"),
-    "Viva":           ("Eligible", "AI"),
-    "Access":         ("UsesLab", "Lab1"),
-    "Maintenance":    ("Eligible", "AI"),
+CATEGORY_ROLE_ACCESS: Dict[str, List[str]] = {
+    "AI_Lab_Support": ["Student", "Instructor"],
+    "Viva":           ["Student", "Instructor"],
+    "Access":         ["Student", "Instructor", "Staff"],
+    "Maintenance":    ["Staff"],
 }
 
 def build_booking_query(role: str, name: str, category: str) -> Optional[str]:
@@ -17,16 +17,20 @@ def build_booking_query(role: str, name: str, category: str) -> Optional[str]:
     Returns:
         str | None: A FOL query string, or None if no mapping exists.
     '''
-    mapping = CATEGORY_TO_FOL_MAP.get(category)
-    if mapping is None:
+    allowed_roles = CATEGORY_ROLE_ACCESS.get(category, [])
+    if role not in allowed_roles:
+        return "REJECTED"
+
+    if category == "Viva":
         return None
 
-    predicate, argument = mapping
+    if category in ("AI_Lab_Support", "Access"):
+        if role == "Instructor":
+            return f"Instructor({name}, AI)"
+        return f"UsesLab({name}, Lab1)"
 
-    if role == "Instructor":
-        return f"Instructor({name}, AI)"
-
-    return f"{predicate}({name}, {argument})"
+    # Maintenance — Staff only, already gated above, no KB rule needed
+    return None
 
 
 def preprocess_request(user_input: Dict[str, Any], request_id: str) -> Dict[str, Any]:
@@ -82,9 +86,9 @@ def preprocess_request(user_input: Dict[str, Any], request_id: str) -> Dict[str,
             "current_location": user_input["current_location"],
             "query":            query,
             "needs_ann":        False,
-            "needs_logic":      True,
-            "needs_csp":        True,
-            "needs_search":     user_input["current_location"] is not None
+            "needs_logic":      query not in (None, "REJECTED"),
+            "needs_csp":        query != "REJECTED",
+            "needs_search":     user_input["current_location"] is not None and query != "REJECTED"
         }
     elif user_input["request_type"] == "Urgent_Service_Request":
         query = build_booking_query(
@@ -106,9 +110,9 @@ def preprocess_request(user_input: Dict[str, Any], request_id: str) -> Dict[str,
             "query":            query,
             "group_id":         user_input["group_id"],
             "needs_ann":        True,
-            "needs_logic":      True,
-            "needs_csp":        True,
-            "needs_search":     True
+            "needs_logic":      query not in (None, "REJECTED"),
+            "needs_csp":        query != "REJECTED",
+            "needs_search":     user_input["current_location"] is not None and query != "REJECTED"
         }
 
     elif user_input["request_type"] == "Full_Service_Request":
@@ -132,7 +136,7 @@ def preprocess_request(user_input: Dict[str, Any], request_id: str) -> Dict[str,
             "query":            query,
             "group_id":         user_input["group_id"],
             "needs_ann":        True,
-            "needs_logic":      True,
-            "needs_csp":        True,
-            "needs_search":     True
+            "needs_logic":      query not in (None, "REJECTED"),
+            "needs_csp":        query != "REJECTED",
+            "needs_search":     query != "REJECTED"
         }

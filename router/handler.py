@@ -133,6 +133,17 @@ def booking_or_scheduling(processed_output: Dict[str, Any]) -> Dict[str, Any]:
     group_id         = processed_output.get("group_id")
     current_location = processed_output.get("current_location")
 
+    if query == "REJECTED":
+        return {
+            "eligibility": {
+                "allowed":     False,
+                "explanation": f"Role '{processed_output.get('role')}' is not permitted to book '{category}'."
+            },
+            "assignment": None,
+            "route":      None,
+            "decision":   "rejected"
+        }
+
     print_dict(processed_output, "Preprocessed Output")
     print_dict({
         "request_id":        processed_output.get("request_id"),
@@ -225,6 +236,17 @@ def urgent_service_request(processed_output: Dict[str, Any]) -> Dict[str, Any]:
 
     # Logic KB check
     query = processed_output.get("query")
+    if query == "REJECTED":
+        return {
+            "ann":         None,
+            "eligibility": {
+                "allowed":     False,
+                "explanation": f"Role '{processed_output.get('role')}' is not permitted to book '{processed_output.get('category')}'."
+            },
+            "csp":   None,
+            "route": None
+        }
+    
     if query:
         logic_result = logic_engine.ask_query(query)
         eligibility_result = {
@@ -255,12 +277,39 @@ def urgent_service_request(processed_output: Dict[str, Any]) -> Dict[str, Any]:
     # Search
     route_result = None
     if csp_result["decision"] == "accepted":
-        path, steps = BFS.bfs(campus_unweighted_graph, processed_output["current_location"], csp_result["destination"])
-        route_result = {
-            "algorithm_used": "BFS",
-            "path":           path,
-            "steps":          steps
-        }
+        current_location = processed_output.get("current_location")
+        destination      = csp_result.get("destination")
+
+        if current_location and destination and current_location != destination:
+            graph_type = get_validated_input(
+                "Select Graph Type for Route (1-3): ",
+                ["Unweighted Graph", "Weighted Graph with Heuristic", "Weighted Graph without Heuristic"],
+                "Graph Types"
+            )
+            if graph_type == "Unweighted Graph":
+                path, _ = BFS.bfs(campus_unweighted_graph, current_location, destination)
+                route_result = {
+                    "algorithm_used": "BFS",
+                    "path":           path,
+                    "steps":          len(path) - 1
+                }
+            elif graph_type == "Weighted Graph with Heuristic":
+                path, cost, _ = A_STAR.a_star(campus_weighted_graph, heuristics, current_location, destination)
+                route_result = {
+                    "algorithm_used": "A* Search",
+                    "path":           path,
+                    "cost":           cost,
+                    "steps":          len(path) - 1
+                }
+            else:
+                path, cost, _ = UCS.ucs(campus_weighted_graph, current_location, destination)
+                route_result = {
+                    "algorithm_used": "Uniform Cost Search",
+                    "path":           path,
+                    "cost":           cost,
+                    "steps":          len(path) - 1
+                }
+            print_dict(route_result, "Search Output")
 
     return {
         "ann":         ann_result,
@@ -288,8 +337,20 @@ def full_service_request(processed_output: Dict[str, Any]) -> Dict[str, Any]:
     # ANN
     ann_result = run_ann(processed_output, distance=4, eligibility=True)
 
+    print_dict(ann_result, "ANN Output")
+
     # Logic KB check
     query = processed_output.get("query")
+    if query == "REJECTED":
+        return {
+            "ann":         None,
+            "eligibility": {
+                "allowed":     False,
+                "explanation": f"Role '{processed_output.get('role')}' is not permitted to book '{processed_output.get('category')}'."
+            },
+            "csp":   None,
+            "route": None
+        }
     if query:
         logic_result = logic_engine.ask_query(query)
         eligibility_result = {
@@ -309,6 +370,8 @@ def full_service_request(processed_output: Dict[str, Any]) -> Dict[str, Any]:
             "csp":         None,
             "route":       None
         }
+    
+    print_dict(eligibility_result, "Logic / KB Output")
 
     # CSP
     csp_result = csp_assign(
@@ -317,15 +380,17 @@ def full_service_request(processed_output: Dict[str, Any]) -> Dict[str, Any]:
         processed_output.get("group_id")
     )
 
+    print_dict(csp_result, "CSP Output")
+
     # Search — always runs for Full_Service_Request
     route_result = None
     if csp_result["decision"] == "accepted":
-        path, cost, steps = A_STAR.a_star(campus_weighted_graph, heuristics, processed_output["current_location"], csp_result["destination"])
+        path, cost, _ = A_STAR.a_star(campus_weighted_graph, heuristics, processed_output["current_location"], csp_result["destination"])
         route_result = {
             "algorithm_used": "A*",
             "path":           path,
             "cost":           cost,
-            "steps":          steps
+            "steps":          len(path) - 1
         }
 
     return {

@@ -33,7 +33,7 @@ def get_validated_input(prompt: str, valid_options: List[str], title: str | None
     while True:
         user_input = input(prompt).strip()
         if user_input.isdigit() and int(user_input) in list(range(1, len(valid_options) + 1)):
-            return valid_options[int(user_input) - 1]
+            return valid_options[int(user_input) - 1].strip()
         print("Invalid input. Please select among the given options only.")
            
 
@@ -237,12 +237,21 @@ def get_booking_inputs(valid_categories: List[str]) -> Tuple[str, int, str | Non
         Tuple[str, int, str | None]: A tuple containing the validated category, preferred slot, and optional group ID.
     '''
     category = get_validated_input(
-        "Enter Category (1-{}): ".format(len(valid_categories)),
+        "Enter Categories: ",
         valid_categories,
-        None 
+        "Valid Categories"
     )
     preferred_slot = get_int_in_range("Enter Preferred Slot (1-4): ", 1, 4)
-    group_id = input("Enter Group ID (optional): ").strip() or None
+
+    if category == "Viva": 
+        valid_groups = ["G1", "G2", "G3", "G4", "G5", "G6"]
+        group_id = get_validated_input(
+            "Enter Group ID (1-{}): ".format(len(valid_groups)),
+            valid_groups,
+            "Valid Groups"
+        )
+    else: 
+        group_id = None 
 
     return category, preferred_slot, group_id
 

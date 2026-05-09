@@ -2,8 +2,8 @@ import math
 from typing import List, Dict, Any
 
 # Weights for w1-w7 and bias — tuned for urgency detection
-WEIGHTS = [0.1, 0.1, 0.4, 0.35, 0.15, -0.1, 0.2]
-BIAS    = -4.5
+WEIGHTS   = [0.02, 0.02, 0.6, 0.55, 0.25, -0.1, 0.3]
+BIAS      = -3.8
 THRESHOLD = 0.5
 
 

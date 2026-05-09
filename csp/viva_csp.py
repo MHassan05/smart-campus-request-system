@@ -12,7 +12,7 @@ GROUPS = {
 SLOT_DOMAIN = [1, 2, 3, 4]
 
 CONSTRAINTS = {
-    "slot_conflict":    [("G1","G2"), ("G1","G4"), ("G2","G4"), ("G3","G5"), ("G3","G6"), ("G5","G6")],
+    "slot_conflict":    [("G1","G2"), ("G1","G4"), ("G2","G4"), ("G2","G3"), ("G3","G5"), ("G3","G6"), ("G5","G6")],
     "examiner_clash":   [("G1","G3")],
     "supervisor_clash": [("G2","G5")],
     "precedence":       [("G4","G3")],

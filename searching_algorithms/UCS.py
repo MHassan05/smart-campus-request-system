@@ -23,7 +23,7 @@ def ucs(graph: Dict[str, List[Tuple[str, int]]], start: str, goal: str) -> Tuple
             return path, cost, steps
         if current_node not in visited:
             visited.add(current_node)
-            for neighbor, edge_cost in graph[current_node]:
+            for neighbor, edge_cost in graph[current_node].items():
                 if neighbor not in visited:
                     heapq.heappush(queue, (cost + edge_cost, neighbor, path + [neighbor]))
     return None, float('inf'), steps

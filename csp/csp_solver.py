@@ -10,14 +10,6 @@ CATEGORY_ROOM_MAP: Dict[str, str] = {
 
 SLOT_DOMAIN = [1, 2, 3, 4]
 
-booked_slots: Dict[str, List[int]] = {
-    "AI_Lab":       [],
-    "Seminar_Room": [],
-    "Library":      [],
-    "Exam_Hall":    [],
-}
-
-
 def csp_assign(category: str, preferred_slot: int, group_id: Optional[str] = None) -> Dict[str, Any]:
     '''
     Assign a room and slot using CSP based on category.
@@ -29,6 +21,13 @@ def csp_assign(category: str, preferred_slot: int, group_id: Optional[str] = Non
         Dict[str, Any]: CSP assignment result.
     '''
     room = CATEGORY_ROOM_MAP.get(category)
+
+    booked_slots: Dict[str, List[int]] = {
+        "AI_Lab":       [],
+        "Seminar_Room": [],
+        "Library":      [],
+        "Exam_Hall":    [],
+    }
 
     if room is None:
         return {
