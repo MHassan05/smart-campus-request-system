@@ -28,7 +28,8 @@ venv.bak/
 .DS_Store 
 Thumbs.db 
 
-# PDF files 
+# PDF & Word Files 
+*.docx 
 *.pdf 
 
 # test files => created for testing purposes, not needed in the repository
